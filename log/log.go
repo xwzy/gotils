@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -8,6 +9,19 @@ import (
 )
 
 var log *logrus.Logger
+
+// CustomJSONFormatter extends logrus.JSONFormatter
+type CustomJSONFormatter struct {
+	logrus.JSONFormatter
+}
+
+// Format adds caller information to the log entry
+func (f *CustomJSONFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+	if entry.Caller != nil {
+		entry.Data["file"] = fmt.Sprintf("%s:%d", entry.Caller.File, entry.Caller.Line)
+	}
+	return f.JSONFormatter.Format(entry)
+}
 
 func init() {
 	log = logrus.New()
@@ -31,7 +45,7 @@ func init() {
 
 	// Optional: Set log level and format
 	log.SetLevel(logrus.InfoLevel)
-	log.SetFormatter(&logrus.JSONFormatter{})
+	log.SetFormatter(&CustomJSONFormatter{})
 }
 
 // Export log functions for use in other packages
